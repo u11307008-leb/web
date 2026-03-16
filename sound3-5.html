@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>挑戰三：賽博龐克故障藝術</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, analyzer;
+  let isPlaying = false;
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+
+      // 🌟 導演指令：極端狀態切換 (Glitch Effect)
+      if (vol > 0.2) {
+        // --- 狀態 A：重拍爆發時 (故障狀態) ---
+        background(255); // 背景瞬間反白
+        
+        // 隨機畫幾條黑色的橫線干擾
+        stroke(0);
+        strokeWeight(random(2, 10));
+        for(let i = 0; i < 5; i++) {
+          let lineY = random(height);
+          line(0, lineY, width, lineY);
+        }
+
+        // 畫出紅色故障文字，並加上隨機震動位移
+        fill(255, 0, 0);
+        noStroke();
+        textSize(100);
+        textAlign(CENTER, CENTER);
+        textStyle(BOLD);
+        text("SYSTEM ERROR", width/2 + random(-20, 20), height/2 + random(-20, 20));
+
+      } else {
+        // --- 狀態 B：平時安靜時 (正常狀態) ---
+        background(0); // 黑色背景
+        
+        fill(255);
+        noStroke();
+        textSize(40);
+        textAlign(CENTER, CENTER);
+        textStyle(NORMAL);
+        text("SYSTEM NORMAL", width/2, height/2);
+      }
+    } else {
+      background(0);
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>

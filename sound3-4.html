@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>挑戰二：瘋狂的霓虹派對</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, analyzer;
+  let isPlaying = false;
+  let smoothedVol = 0;
+  let currentAngle = 0;
+  
+  // 🌟 新增：用來儲存當前霓虹顏色的變數
+  let neonColor;
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+    neonColor = color(255); // 初始為白色
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    // 加上一點透明度的黑色背景，可以創造殘影效果
+    background(0, 0, 0, 50); 
+
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+      smoothedVol = lerp(smoothedVol, vol, 0.1); 
+
+      // 🌟 導演指令：Threshold (門檻值) 判定
+      // 只有當真實音量瞬間衝破 0.35 時，才換顏色！
+      if (vol > 0.1) {
+        // 隨機產生明亮的 RGB 顏色 (數值介於 100~255 之間確保夠亮)
+        neonColor = color(random(100, 255), random(100, 255), random(100, 255));
+      }
+
+      let shapeSize = map(smoothedVol, 0, 0.4, 50, 500, true);
+      currentAngle += 0.05;
+
+      push();
+      translate(width / 2, height / 2);
+      rotate(currentAngle);
+      
+      rectMode(CENTER);
+      noFill();
+      stroke(neonColor); // 套用剛剛決定的霓虹顏色
+      strokeWeight(8);
+      
+      // 畫兩個交錯的正方形
+      rect(0, 0, shapeSize, shapeSize);
+      rotate(PI / 4); // 轉 45 度
+      rect(0, 0, shapeSize, shapeSize);
+      pop();
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>

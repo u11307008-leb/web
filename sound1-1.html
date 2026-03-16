@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello Volume - 聲音視覺化起點</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+
+  <style>
+    /* 基本網頁設定：黑色背景、隱藏卷軸 */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* 直接在這裡設計 HTML 按鈕的樣式 */
+    #startButton {
+      position: absolute; /* 讓按鈕浮在畫布上方 */
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 10; /* 確保按鈕在最上層 */
+      transition: 0.3s;
+    }
+    
+    #startButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;       
+  let analyzer;   
+  let isPlaying = false; // 紀錄音樂是否正在播放
+
+  // 2. 預載入音樂檔案
+  function preload() {
+    song = loadSound('music.mp3'); 
+  }
+
+  // 3. 初始設定
+  function setup() {
+    createCanvas(windowWidth, windowHeight); 
+    
+    // 建立音量分析器
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song); 
+
+    // 抓取 HTML 裡面的按鈕，並設定點擊事件
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); // 解除瀏覽器靜音限制
+      song.play();      // 播放音樂
+      isPlaying = true; // 更新狀態
+      btn.style.display = 'none'; // 點擊後隱藏按鈕
+    });
+  }
+
+  // 4. 畫面繪製 (每秒重複執行 60 次)
+  function draw() {
+    background(0); // 黑色背景
+
+    // 如果音樂開始播放了，才顯示數字
+    if (isPlaying) {
+      let vol = analyzer.getLevel(); // 取得 0.0 ~ 1.0 的音量數字
+
+      fill(255);          
+      noStroke();         
+      textAlign(CENTER, CENTER); 
+      
+      // 顯示音量數字
+      textSize(80);       
+      text(vol.toFixed(4), width / 2, height / 2);
+      
+      // 顯示說明文字
+      textSize(24);
+      fill(150);
+      text("目前的音量數值 (0.0 ~ 1.0)", width / 2, height / 2 + 80);
+    }
+  }
+
+  // 當視窗大小改變時，自動調整畫布大小
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>

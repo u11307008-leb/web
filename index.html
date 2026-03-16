@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sound Interactive 練習入口</title>
+  <style>
+    :root {
+      --bg: #05060a;
+      --bg-elevated: #111827;
+      --bg-elevated-soft: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --accent-strong: rgba(56, 189, 248, 0.95);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.3);
+      --card-radius: 18px;
+      --shadow-soft: 0 22px 45px rgba(15, 23, 42, 0.9);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 45%, #000 100%);
+      color: var(--text);
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 32px 16px 40px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.12), transparent 55%),
+                  radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.18), transparent 55%),
+                  linear-gradient(135deg, var(--bg-elevated-soft), #020617 52%, #020617 100%);
+      border-radius: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      box-shadow: var(--shadow-soft);
+      padding: 26px 26px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.16), transparent 60%);
+      mix-blend-mode: screen;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    .shell-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 14px 24px;
+      justify-content: space-between;
+    }
+
+    .title-block {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .logo-pill {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #e0f2fe 0, #38bdf8 30%, #0ea5e9 60%, #0f172a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.85), 0 8px 24px rgba(15, 23, 42, 0.95);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-pill::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(248, 250, 252, 0.55), transparent 40%);
+      mix-blend-mode: screen;
+      opacity: 0.75;
+    }
+
+    .logo-wave {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #f9fafb 0, #bae6fd 40%, transparent 70%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-wave::before,
+    .logo-wave::after {
+      content: "";
+      position: absolute;
+      inset: 50% -40%;
+      border-radius: 999px;
+      border: 2px solid rgba(15, 23, 42, 0.9);
+      transform-origin: center;
+    }
+
+    .logo-wave::before {
+      transform: translate(-10%, -70%) rotate(-14deg);
+    }
+
+    .logo-wave::after {
+      transform: translate(-20%, -25%) rotate(-14deg);
+      opacity: 0.7;
+    }
+
+    .title-text h1 {
+      font-size: clamp(1.5rem, 1.15rem + 1vw, 2.1rem);
+      letter-spacing: 0.02em;
+      margin: 0 0 2px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .title-text h1 span.main {
+      font-weight: 650;
+    }
+
+    .title-text h1 span.tag {
+      font-size: 0.86rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .title-text p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 520px;
+    }
+
+    .info-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .chip {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--muted);
+      backdrop-filter: blur(14px);
+      background: linear-gradient(120deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.5));
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #a5f3fc, #22d3ee 45%, #0369a1 100%);
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.9);
+    }
+
+    .chip-strong {
+      border-color: rgba(56, 189, 248, 0.6);
+      background: linear-gradient(120deg, rgba(8, 47, 73, 0.92), rgba(8, 47, 73, 0.6));
+      color: #e0f2fe;
+    }
+
+    .grid-wrapper {
+      border-radius: 24px;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.2), transparent 60%),
+                  linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98));
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(30, 64, 175, 0.55);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grid-wrapper::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 0),
+        linear-gradient(180deg, rgba(148, 163, 184, 0.06) 1px, transparent 0);
+      background-size: 20px 20px;
+      opacity: 0.7;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    .grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+
+    .grid-header h2 {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(191, 219, 254, 0.96);
+    }
+
+    .grid-header span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    a.card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 14px 12px;
+      border-radius: var(--card-radius);
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.4), transparent 55%),
+                  linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.42);
+      color: inherit;
+      text-decoration: none;
+      overflow: hidden;
+      cursor: pointer;
+      transition:
+        transform 0.18s ease-out,
+        box-shadow 0.18s ease-out,
+        border-color 0.18s ease-out,
+        background 0.18s ease-out,
+        outline 0.12s ease-out,
+        outline-offset 0.12s ease-out;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 1);
+      backdrop-filter: blur(18px);
+    }
+
+    a.card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: conic-gradient(
+        from 200deg,
+        rgba(56, 189, 248, 0.8),
+        transparent 30%,
+        transparent 70%,
+        rgba(59, 130, 246, 0.8),
+        rgba(129, 140, 248, 0.8),
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.15s ease-out, transform 0.28s ease-out;
+      transform: translate3d(0, 18px, 0) scale(1.15);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    a.card::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--card-radius) - 4px);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.98));
+      z-index: 0;
+    }
+
+    a.card:hover,
+    a.card:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 35px rgba(15, 23, 42, 0.9);
+      border-color: rgba(56, 189, 248, 0.8);
+      outline: 1px solid rgba(56, 189, 248, 0.85);
+      outline-offset: 1px;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.85), transparent 55%),
+                  linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96));
+    }
+
+    a.card:hover::before,
+    a.card:focus-visible::before {
+      opacity: 0.9;
+      transform: translate3d(0, 0, 0) scale(1.02);
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(191, 219, 254, 0.94);
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(129, 140, 248, 0.7);
+      align-self: flex-start;
+    }
+
+    .card-label-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #bfdbfe, #60a5fa 40%, #1e3a8a 100%);
+      box-shadow: 0 0 6px rgba(96, 165, 250, 0.9);
+    }
+
+    .card-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #e5e7eb;
+    }
+
+    .card-subtitle {
+      font-size: 0.82rem;
+      color: rgba(209, 213, 219, 0.9);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: rgba(148, 163, 184, 0.96);
+    }
+
+    .card-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pill {
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.96);
+      font-size: 0.74rem;
+      color: rgba(209, 213, 219, 0.96);
+    }
+
+    footer {
+      margin-top: 4px;
+      font-size: 0.76rem;
+      color: rgba(148, 163, 184, 0.9);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    footer a {
+      color: rgba(191, 219, 254, 0.95);
+      text-decoration: none;
+      position: relative;
+    }
+
+    footer a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.9), rgba(56, 189, 248, 0.1));
+      transform-origin: center;
+      transform: scaleX(0);
+      transition: transform 0.2s ease-out;
+    }
+
+    footer a:hover::after,
+    footer a:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 18px 12px 22px;
+      }
+
+      .shell {
+        padding: 18px 16px 20px;
+        border-radius: 22px;
+      }
+
+      .grid-wrapper {
+        padding: 14px 12px 14px;
+        border-radius: 18px;
+      }
+
+      .card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      }
+
+      .title-text p {
+        font-size: 0.88rem;
+      }
+
+      header {
+        gap: 10px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="shell-inner">
+      <header>
+        <div class="title-block">
+          <div class="logo-pill" aria-hidden="true">
+            <div class="logo-wave"></div>
+          </div>
+          <div class="title-text">
+            <h1>
+              <span class="main">Sound Interactive</span>
+              <span class="tag">Audio · Visual · Lab</span>
+            </h1>
+            <p>點選下方任一卡片，進入對應的互動聲音實驗頁面。建議開啟喇叭或耳機體驗。</p>
+          </div>
+        </div>
+        <div class="info-chips" aria-hidden="true">
+          <div class="chip chip-strong">
+            <span class="chip-dot"></span>
+            即時互動聲音
+          </div>
+          <div class="chip">
+            <span class="chip-dot"></span>
+            15 個實驗場景
+          </div>
+        </div>
+      </header>
+
+      <section class="grid-wrapper" aria-label="Sound Interactive 練習列表">
+        <div class="grid-header">
+          <h2>練習清單</h2>
+          <span>依主題與章節整理，每張卡片為一個 HTML 頁面</span>
+        </div>
+        <main>
+          <div class="card-grid">
+            <a class="card" href="sound1-1.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 1
+                </span>
+                <div>
+                  <div class="card-title">1-1 音量偵測起點</div>
+                  <div class="card-subtitle">Hello Volume · 顯示即時音量數值</div>
+                </div>
+                <div class="card-meta">
+                  <span>
+                    🔊
+                    <span>基本互動</span>
+                  </span>
+                  <span class="pill">sound1-1.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound1-2.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 1
+                </span>
+                <div>
+                  <div class="card-title">1-2 聲音視覺化</div>
+                  <div class="card-subtitle">延伸第一章，探索不同視覺表現</div>
+                </div>
+                <div class="card-meta">
+                  <span>🔊 <span>基礎延伸</span></span>
+                  <span class="pill">sound1-2.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound1-3.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 1
+                </span>
+                <div>
+                  <div class="card-title">1-3 聲音反應版面</div>
+                  <div class="card-subtitle">嘗試更多介面與版面配置</div>
+                </div>
+                <div class="card-meta">
+                  <span>🔊 <span>介面設計</span></span>
+                  <span class="pill">sound1-3.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound1-4.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 1
+                </span>
+                <div>
+                  <div class="card-title">1-4 聲音互動綜合</div>
+                  <div class="card-subtitle">整合本章技巧，做一個完整實驗</div>
+                </div>
+                <div class="card-meta">
+                  <span>🔊 <span>綜合練習</span></span>
+                  <span class="pill">sound1-4.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound2-1.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 2
+                </span>
+                <div>
+                  <div class="card-title">2-1 節奏與節拍</div>
+                  <div class="card-subtitle">探索節奏、拍點與聲音反應</div>
+                </div>
+                <div class="card-meta">
+                  <span>🎵 <span>節奏實驗</span></span>
+                  <span class="pill">sound2-1.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound2-2.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 2
+                </span>
+                <div>
+                  <div class="card-title">2-2 多軌聲音</div>
+                  <div class="card-subtitle">嘗試多個聲音來源與變化</div>
+                </div>
+                <div class="card-meta">
+                  <span>🎵 <span>多聲道</span></span>
+                  <span class="pill">sound2-2.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound3-1.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 3
+                </span>
+                <div>
+                  <div class="card-title">3-1 頻譜初探</div>
+                  <div class="card-subtitle">從頻率角度看聲音的樣子</div>
+                </div>
+                <div class="card-meta">
+                  <span>📈 <span>頻譜基礎</span></span>
+                  <span class="pill">sound3-1.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound3-2.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 3
+                </span>
+                <div>
+                  <div class="card-title">3-2 頻率視覺化</div>
+                  <div class="card-subtitle">以圖形方式呈現不同頻段</div>
+                </div>
+                <div class="card-meta">
+                  <span>📈 <span>視覺化進階</span></span>
+                  <span class="pill">sound3-2.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound3-3.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 3
+                </span>
+                <div>
+                  <div class="card-title">3-3 頻譜互動</div>
+                  <div class="card-subtitle">加入互動控制，操作頻率效果</div>
+                </div>
+                <div class="card-meta">
+                  <span>📈 <span>互動控制</span></span>
+                  <span class="pill">sound3-3.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound3-4.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 3
+                </span>
+                <div>
+                  <div class="card-title">3-4 頻譜混合視覺</div>
+                  <div class="card-subtitle">頻譜搭配更多圖像與動態</div>
+                </div>
+                <div class="card-meta">
+                  <span>📈 <span>圖像實驗</span></span>
+                  <span class="pill">sound3-4.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound3-5.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 3
+                </span>
+                <div>
+                  <div class="card-title">3-5 頻譜綜合場景</div>
+                  <div class="card-subtitle">綜合頻譜效果，打造完整場景</div>
+                </div>
+                <div class="card-meta">
+                  <span>📈 <span>綜合運用</span></span>
+                  <span class="pill">sound3-5.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound4-1.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 4
+                </span>
+                <div>
+                  <div class="card-title">4-1 空間與位置</div>
+                  <div class="card-subtitle">嘗試聲音在空間中的移動</div>
+                </div>
+                <div class="card-meta">
+                  <span>🌌 <span>空間感</span></span>
+                  <span class="pill">sound4-1.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound4-2.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 4
+                </span>
+                <div>
+                  <div class="card-title">4-2 聲音場景設計</div>
+                  <div class="card-subtitle">用聲音與畫面營造空間氛圍</div>
+                </div>
+                <div class="card-meta">
+                  <span>🌌 <span>場景營造</span></span>
+                  <span class="pill">sound4-2.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound5-1.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 5
+                </span>
+                <div>
+                  <div class="card-title">5-1 互動控制面板</div>
+                  <div class="card-subtitle">加入更多 UI 控制，調整聲音參數</div>
+                </div>
+                <div class="card-meta">
+                  <span>🧩 <span>控制介面</span></span>
+                  <span class="pill">sound5-1.html</span>
+                </div>
+              </div>
+            </a>
+
+            <a class="card" href="sound5-2.html">
+              <div class="card-inner">
+                <span class="card-label">
+                  <span class="card-label-dot"></span>
+                  Chapter 5
+                </span>
+                <div>
+                  <div class="card-title">5-2 最終綜合實驗</div>
+                  <div class="card-subtitle">集結前面章節技巧的完整作品</div>
+                </div>
+                <div class="card-meta">
+                  <span>🧩 <span>Final Mix</span></span>
+                  <span class="pill">sound5-2.html</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </main>
+      </section>
+
+      <footer>
+        <span>提示：如果頁面有聲音未自動播放，請先在畫面中點擊任一按鈕以啟用瀏覽器音訊。</span>
+        <span>入口檔名：<code>index.html</code>（可直接在瀏覽器開啟）</span>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

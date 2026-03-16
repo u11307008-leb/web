@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>實戰六：經典 64 段頻譜圖</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, fft;
+  let isPlaying = false;
+  
+  // 頻段數量，通常是 2 的次方 (16, 32, 64, 128...)
+  const BINS = 64; 
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    
+    // 建立 FFT 分析器，第二個參數平滑度先設 0.8，第三個參數是 BINS 數量
+    fft = new p5.FFT(0.8, BINS);
+    
+    // 切換到 HSB 色彩模式 (色相, 飽和度, 亮度)，方便畫彩虹色
+    colorMode(HSB, 255); 
+    
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    background(0);
+
+    if (isPlaying) {
+      // spectrum 是一個陣列，裡面裝了 64 個數字 (代表 64 個不同高低音的能量)
+      let spectrum = fft.analyze(); 
+      
+      // 計算每一根柱子的寬度 (螢幕總寬度除以 64)
+      let barWidth = width / spectrum.length;
+
+      noStroke();
+      
+      // 使用 for 迴圈，一次畫出 64 根柱子
+      for (let i = 0; i < spectrum.length; i++) {
+        // spectrum[i] 的數值是 0~255。我們把它 mapping 到高度上
+        let barHeight = map(spectrum[i], 0, 255, 0, height * 0.8);
+        
+        // 根據 i (頻段的順序) 決定顏色，產生彩虹漸層效果
+        let hue = map(i, 0, spectrum.length, 0, 255);
+        fill(hue, 255, 255);
+
+        // 畫出長方形 (X位置, Y位置, 寬度, 高度)
+        // Y 座標從畫布最底端 (height) 往上畫 (減去 barHeight)
+        rect(i * barWidth, height - barHeight, barWidth, barHeight);
+      }
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>實戰三：平滑化的能量方塊</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background-color: #001f3f; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; background-color: #fff; color: #000; border: none; border-radius: 8px; font-weight: bold; z-index: 10; transition: 0.3s; }
+    #startButton:hover { background-color: #ddd; }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;
+  let analyzer;
+  let isPlaying = false;
+  let angle = 0; 
+  
+  // 🌟 新增：用來儲存「平滑後」的音量變數，初始值為 0
+  let smoothedVol = 0; 
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); 
+      song.play();
+      isPlaying = true;
+      btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+
+      // 🌟 核心魔法：使用 lerp 產生阻力與彈性！
+      // 0.1 代表每次只往真實音量靠近 10%，這創造了完美的滑順感
+      smoothedVol = lerp(smoothedVol, vol, 0.1); 
+
+      // 以下所有的 Mapping，全部改用 smoothedVol！
+      let flash = map(smoothedVol, 0, 0.4, 0, 150, true);
+      background(0 + flash, 31 + flash, 63 + flash);
+
+      let rectSize = map(smoothedVol, 0, 0.4, 50, 400, true);
+      let rotationSpeed = map(smoothedVol, 0, 0.4, 0.01, 0.2, true);
+      angle += rotationSpeed; 
+
+      push(); 
+      translate(width / 2, height / 2); 
+      rotate(angle); 
+      
+      rectMode(CENTER); 
+      noFill();         
+      stroke(255);      
+      strokeWeight(4);  
+      rect(0, 0, rectSize, rectSize); 
+      
+      pop(); 
+    } else {
+      background(0, 31, 63); 
+    }
+  }
+
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+
+</body>
+</html>

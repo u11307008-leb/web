@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>實戰四：重低音相機震動</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background-color: #001f3f; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; background-color: #fff; color: #000; border: none; border-radius: 8px; font-weight: bold; z-index: 10; }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;
+  let analyzer;
+  let isPlaying = false;
+  let angle = 0; 
+  let smoothedVol = 0; 
+  
+  // 🌟 新增：相機震動的幅度變數
+  let shakeAmount = 0; 
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+      smoothedVol = lerp(smoothedVol, vol, 0.1); 
+
+      // 🌟 核心魔法：節拍偵測 (Threshold)
+      // 如果音量突然大於 0.3，就觸發強烈震動！
+      if (vol > 0.3) {
+        shakeAmount = 20; // 將震動幅度拉滿
+      }
+
+      // 1. 畫面背景
+      let flash = map(smoothedVol, 0, 0.4, 0, 150, true);
+      background(0 + flash, 31 + flash, 63 + flash);
+
+      push(); 
+      
+      // 🌟 核心魔法：相機震動實作
+      // 在移動到畫面正中央之前，先加入一點隨機的 X 和 Y 偏移量
+      let shakeX = random(-shakeAmount, shakeAmount);
+      let shakeY = random(-shakeAmount, shakeAmount);
+      translate(width / 2 + shakeX, height / 2 + shakeY); 
+      
+      // 震動幅度衰減 (每幀減少 10%，直到歸零)
+      shakeAmount = shakeAmount * 0.9;
+
+      // 2. 繪製方塊
+      let rectSize = map(smoothedVol, 0, 0.4, 50, 400, true);
+      let rotationSpeed = map(smoothedVol, 0, 0.4, 0.01, 0.2, true);
+      angle += rotationSpeed; 
+      rotate(angle); 
+      
+      rectMode(CENTER); 
+      noFill();         
+      stroke(255);      
+      strokeWeight(4);  
+      rect(0, 0, rectSize, rectSize); 
+      
+      pop(); 
+    } else {
+      background(0, 31, 63); 
+    }
+  }
+
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+
+</body>
+</html>

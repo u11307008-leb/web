@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>實戰五：樂團分工 (FFT)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #222; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, fft;
+  let isPlaying = false;
+  
+  // 建立三個變數來儲存平滑化後的能量
+  let smoothBass = 0;
+  let smoothMid = 0;
+  let smoothTreble = 0;
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    
+    // 🌟 核心魔法：建立 FFT 分析器
+    fft = new p5.FFT();
+    
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+    
+    rectMode(CENTER);
+  }
+
+  function draw() {
+    background(34); // 深灰色背景
+
+    if (isPlaying) {
+      // 必須先呼叫 analyze()，才能開始抓取能量
+      fft.analyze();
+      
+      // 🌟 核心魔法：分別抓取低、中、高音的能量 (0~255)
+      let bassEnergy = fft.getEnergy("bass");
+      let midEnergy = fft.getEnergy("mid");
+      let trebleEnergy = fft.getEnergy("treble");
+
+      // 加入 Lerp 平滑化 (0.1)
+      smoothBass = lerp(smoothBass, bassEnergy, 0.1);
+      smoothMid = lerp(smoothMid, midEnergy, 0.1);
+      smoothTreble = lerp(smoothTreble, trebleEnergy, 0.1);
+
+      // 設定 Mapping 轉換為大小 (50 到 300)
+      let bassSize = map(smoothBass, 0, 255, 50, 300);
+      let midSize = map(smoothMid, 0, 255, 50, 300);
+      let trebleSize = map(smoothTreble, 0, 255, 50, 300);
+
+      noStroke();
+
+      // 1. 左邊：低音 (紅色正方形)
+      fill(255, 50, 50);
+      rect(width * 0.25, height / 2, bassSize, bassSize);
+      
+      // 2. 中間：中音 (綠色圓形)
+      fill(50, 255, 50);
+      circle(width * 0.5, height / 2, midSize);
+
+      // 3. 右邊：高音 (藍色正方形旋轉 45 度變菱形)
+      fill(50, 150, 255);
+      push();
+      translate(width * 0.75, height / 2);
+      rotate(PI / 4);
+      rect(0, 0, trebleSize, trebleSize);
+      pop();
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>練習三：測謊機歷史軌跡圖</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #startButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 10;
+      transition: 0.3s;
+    }
+    #startButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;       
+  let analyzer;   
+  let isPlaying = false; 
+  
+  // 新增一個變數：用來儲存「歷史音量」的陣列（清單）
+  let volHistory = []; 
+
+  function preload() {
+    song = loadSound('music.mp3'); 
+  }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight); 
+    
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song); 
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); 
+      song.play();      
+      isPlaying = true; 
+      btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    background(0); 
+
+    if (isPlaying) {
+      let vol = analyzer.getLevel(); 
+      
+      // 將「現在」的音量，推入歷史紀錄的清單中
+      volHistory.push(vol); 
+
+      // --- 1. 顯示跳動的數字 ---
+      // 為了不被線條擋住，我們把數字稍微往上移一點
+      fill(255);          
+      noStroke();         
+      textAlign(CENTER, CENTER); 
+      textSize(80);       
+      text(vol.toFixed(4), width / 2, height / 2 - 100); 
+      
+      textSize(24);
+      fill(150);
+      text("目前的音量數值 (0.0 ~ 1.0)", width / 2, height / 2 - 20);
+
+      // --- 2. 練習三：繪製歷史軌跡折線 ---
+      noFill();                 // 折線圖不需要填滿內部顏色
+      stroke(0, 255, 255);      // 設定線條為青色 (Cyan)
+      strokeWeight(3);          // 線條粗細
+
+      // 開始畫連續折線
+      beginShape();
+      for (let i = 0; i < volHistory.length; i++) {
+        // 將音量數值 (0~1) Mapping 到畫面的下方三分之一高度
+        // volHistory[i] 為 0 時，畫在螢幕最底端 (height)
+        // volHistory[i] 為 1 時，畫在螢幕下方偏上的位置 (height * 0.6)
+        let y = map(volHistory[i], 0, 1, height, height * 0.6);
+        
+        // 畫出每一個點 (X座標為陣列的索引，Y座標為算出來的高度)
+        vertex(i, y);
+      }
+      endShape();
+
+      // --- 3. 讓線條「動起來」的魔法 ---
+      // 如果記錄的點數量超過了螢幕寬度，就把「最舊的（最左邊）」點刪除
+      // 這樣新的點會一直從右邊加進來，看起來就像是整個波浪往左邊移動！
+      if (volHistory.length > width) {
+        volHistory.shift(); 
+      }
+    }
+  }
+
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>

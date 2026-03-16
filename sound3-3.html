@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>挑戰一：深海裡的史萊姆</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #051014; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, analyzer;
+  let isPlaying = false;
+  let smoothedVol = 0; 
+
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+    
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    background(5, 16, 20); // 深海暗藍綠色
+
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+      
+      // 🌟 導演指令：將 Lerp 係數調到極小 (0.02)，創造史萊姆般的遲鈍感
+      smoothedVol = lerp(smoothedVol, vol, 0.02); 
+
+      let slimeSize = map(smoothedVol, 0, 0.4, 100, 600, true);
+      let glow = map(smoothedVol, 0, 0.4, 50, 255, true);
+
+      // 畫出發出螢光綠色的史萊姆
+      noStroke();
+      fill(0, 255, 100, glow); // 螢光綠加上動態透明度
+      circle(width / 2, height / 2, slimeSize);
+      
+      // 畫一個實心的核心
+      fill(0, 255, 150);
+      circle(width / 2, height / 2, slimeSize * 0.5);
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>實戰二：全場閃爍與能量方塊</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #001f3f; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #startButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 10;
+      transition: 0.3s;
+    }
+    #startButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;
+  let analyzer;
+  let isPlaying = false;
+  
+  // 新增一個變數：用來記錄方塊當前的「旋轉角度」
+  let angle = 0; 
+
+  function preload() {
+    song = loadSound('music.mp3');
+  }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); 
+      song.play();
+      isPlaying = true;
+      btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    if (isPlaying) {
+      let vol = analyzer.getLevel();
+
+      // --- 1. 背景閃爍綁定 ---
+      // 算出一個「閃光值 (flash)」，音量越大，加的亮度越多
+      let flash = map(vol, 0, 0.4, 0, 150, true);
+      // 原本深藍色是 (0, 31, 63)，現在加上閃光值，製造打雷的視覺感
+      background(0 + flash, 31 + flash, 63 + flash);
+
+      // --- 2. 方塊大小與旋轉速度綁定 ---
+      // 大小：音量 0.4 時放大到 400px (假設安靜時基礎大小是 50px)
+      let rectSize = map(vol, 0, 0.4, 50, 400, true);
+      
+      // 旋轉速度：音量越大，每一幀增加的角度就越多（轉越快）
+      let rotationSpeed = map(vol, 0, 0.4, 0.01, 0.2, true);
+      angle += rotationSpeed; // 將速度不斷累加到總角度上
+
+      // --- 3. 繪製中央旋轉的能量方塊 ---
+      push(); // 儲存當前的畫布狀態
+      
+      // 將畫布的原點 (0,0) 移動到螢幕正中央
+      translate(width / 2, height / 2); 
+      rotate(angle); // 根據計算出來的角度旋轉畫布
+      
+      rectMode(CENTER); // 設定正方形從「中心點」開始畫
+      noFill();         // 內部透明
+      stroke(255);      // 白色邊框
+      strokeWeight(4);  // 邊框粗細設為 4px
+      
+      // 因為原點已經移到中央了，所以直接在 (0, 0) 畫出方形
+      rect(0, 0, rectSize, rectSize); 
+      
+      pop(); // 恢復畫布狀態，避免影響下一次繪圖
+      
+    } else {
+      // 音樂還沒播的時候，維持安靜的深藍色背景
+      background(0, 31, 63); 
+    }
+  }
+
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>

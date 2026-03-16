@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會呼吸的發光球體</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #001f3f; /* 預設深藍色背景 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #startButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 10;
+      transition: 0.3s;
+    }
+    #startButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;
+  let analyzer;
+  let isPlaying = false;
+
+  function preload() {
+    // 載入同一資料夾下的音樂檔
+    song = loadSound('music.mp3');
+  }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song);
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); // 處理瀏覽器音訊限制
+      song.play();
+      isPlaying = true;
+      btn.style.display = 'none'; // 隱藏按鈕
+    });
+  }
+
+  function draw() {
+    // 1. 設定深藍色背景 (R:0, G:31, B:63)
+    background(0, 31, 63);
+
+    if (isPlaying) {
+      // 取得當前音量
+      let vol = analyzer.getLevel();
+
+      // 2. 核心魔法：數值映射 (Mapping)
+      // p5.js 的 map 函數第五個參數設為 true，代表會「限制 (constrain)」最大最小值
+      // 這樣就算音量偶爾超過 0.4，直徑也不會無限放大超過 600
+      let circleDiameter = map(vol, 0, 0.4, 50, 600, true);
+      
+      // 透明度在 p5.js 預設是 0~255。10% 大約是 25，100% 是 255
+      let circleAlpha = map(vol, 0, 0.4, 25, 255, true);
+
+      // 3. 繪製白色的無邊框圓形
+      noStroke(); // 無邊框
+      fill(255, 255, 255, circleAlpha); // 填色：白色 (255,255,255) + 動態透明度
+      
+      // 在畫面正中央畫圓
+      circle(width / 2, height / 2, circleDiameter);
+    }
+  }
+
+  // 視窗縮放時自動調整畫布
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>

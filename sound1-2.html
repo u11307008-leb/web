@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>練習一：基礎長條音量表</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #startButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 10;
+      transition: 0.3s;
+    }
+    #startButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song;       
+  let analyzer;   
+  let isPlaying = false; 
+
+  function preload() {
+    song = loadSound('music.mp3'); 
+  }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight); 
+    
+    analyzer = new p5.Amplitude();
+    analyzer.setInput(song); 
+
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); 
+      song.play();      
+      isPlaying = true; 
+      btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    background(0); 
+
+    if (isPlaying) {
+      let vol = analyzer.getLevel(); 
+
+      // --- 1. 顯示跳動的數字 ---
+      fill(255);          
+      noStroke();         
+      textAlign(CENTER, CENTER); 
+      textSize(80);       
+      // 把數字稍微往上移一點，騰出空間給下方的長條圖
+      text(vol.toFixed(4), width / 2, height / 2 - 50); 
+      
+      textSize(24);
+      fill(150);
+      text("目前的音量數值 (0.0 ~ 1.0)", width / 2, height / 2 + 30);
+
+      // --- 2. 練習一：繪製亮綠色長條圖 ---
+      // 關鍵魔法：將音量 (0 到 1) 轉換成螢幕寬度 (0 到 width)
+      let barWidth = map(vol, 0, 1, 0, width); 
+      
+      fill(0, 255, 0); // 設定為亮綠色 (R:0, G:255, B:0)
+      rectMode(CORNER); // 設定矩形從左上角開始畫
+      
+      // 畫出矩形：X座標為0(最左邊)，Y座標在文字下方，寬度為 barWidth，高度為 50
+      rect(0, height / 2 + 100, barWidth, 50); 
+    }
+  }
+
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>

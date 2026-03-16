@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Boss A：環形聲波雷達</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #startButton { position: absolute; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; z-index: 10; }
+  </style>
+</head>
+<body>
+<button id="startButton">點擊播放音樂</button>
+
+<script>
+  let song, fft;
+  let isPlaying = false;
+  
+  function preload() { song = loadSound('music.mp3'); }
+
+  function setup() {
+    createCanvas(windowWidth, windowHeight);
+    angleMode(DEGREES); // 告訴 p5.js 我們要用 360 度來算角度，而不是弧度 (PI)
+    colorMode(HSB);
+    
+    fft = new p5.FFT(0.8, 64);
+    
+    let btn = document.getElementById('startButton');
+    btn.addEventListener('click', function() {
+      userStartAudio(); song.play(); isPlaying = true; btn.style.display = 'none'; 
+    });
+  }
+
+  function draw() {
+    background(0);
+
+    if (isPlaying) {
+      let spectrum = fft.analyze(); 
+      
+      // 將畫布原點移到正中央
+      translate(width / 2, height / 2);
+      
+      // 畫左右兩邊，產生對稱翅膀感
+      for (let side = -1; side <= 1; side += 2) { 
+        // side 為 -1 畫左邊，side 為 1 畫右邊
+        beginShape();
+        noFill();
+        strokeWeight(4);
+
+        for (let i = 0; i < spectrum.length; i++) {
+          // 只取 180 度的半圓
+          let angle = map(i, 0, spectrum.length, 0, 180) * side; 
+          // 能量越大，長度加得越多 (基礎半徑 100 + 能量高度)
+          let r = map(spectrum[i], 0, 255, 100, 350); 
+          
+          // AI 幫我們寫好的極座標轉換魔法 (極座標轉 XY 座標)
+          let x = r * cos(angle - 90); 
+          let y = r * sin(angle - 90);
+
+          let hue = map(i, 0, spectrum.length, 0, 360);
+          stroke(hue, 255, 255);
+          
+          // 將點連成線條
+          line(100 * cos(angle - 90), 100 * sin(angle - 90), x, y);
+        }
+        endShape();
+      }
+      
+      // 中間畫一個隨著低音跳動的核心圓
+      let bass = fft.getEnergy("bass");
+      let coreSize = map(bass, 0, 255, 80, 150);
+      noStroke();
+      fill(0, 0, 255, 0.3); // 半透明光暈
+      circle(0, 0, coreSize);
+    }
+  }
+  function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>
